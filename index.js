@@ -64,6 +64,68 @@ async function showMenu() {
     await showMenu();
 }
 
+async function loadConfig() {
+  try {
+    const data = await fs.readFile(CONFIG_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return {};
+  }
+}
+
+async function saveConfig(config) {
+  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+async function configureSettings() {
+  const existingConfig = await loadConfig();
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'location',
+      message: 'Enter your default location:',
+      default: existingConfig.location || '',
+    },
+    {
+      type: 'input',
+      name: 'apiKey',
+      message: 'Enter your weather API key:',
+      default: existingConfig.apiKey || '',
+    },
+  ]);
+
+  await saveConfig(answers);
+
+  console.log(chalk.green('Settings saved successfully!'));
+  await sleep(1000);
+}
+
+const getIcon = (icon) => {
+  switch (icon.slice(0, -1)) {
+    case '01':
+      return '☀️';
+    case '02':
+      return '🌤️';
+    case '03':
+      return '☁️';
+    case '04':
+      return '☁️';
+    case '09':
+      return '🌧️';
+    case '10':
+      return '🌦️';
+    case '11':
+      return '🌩️';
+    case '13':
+      return '❄️';
+    case '50':
+      return '🌫️';
+    default:
+      return '🌈';
+  }
+};
+
 
 async function start() {
     await welcome();
