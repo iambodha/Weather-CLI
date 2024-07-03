@@ -126,6 +126,40 @@ const getIcon = (icon) => {
   }
 };
 
+async function checkWeather() {
+  const config = await loadConfig();
+  if (!config.location || !config.apiKey) {
+    console.log(chalk.red('Please configure your location and API key first.'));
+    await sleep(1000);
+    return;
+  }
+
+  const spinner = createSpinner('Fetching weather data...').start();
+  try {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${config.location}&appid=${config.apiKey}&units=metric`);
+    const data = await response.json();
+
+    if (data.cod !== 200) {
+      spinner.error({ text: `Error: ${data.message}` });
+      return;
+    }
+
+    spinner.success({ text: 'Weather data fetched successfully!' });
+
+    console.log(chalk.bold(`\n🌎 Weather in ${data.name}`));
+    console.log(`${getIcon(data.weather[0].icon)}  ${chalk.yellow(data.weather[0].main)} - ${chalk.italic(data.weather[0].description)}`);
+    console.log(`🌡️ Temperature: ${data.main.temp.toFixed(1)}°C / ${(data.main.temp * 9/5 + 32).toFixed(1)}°F`);
+    console.log(`🤔 Feels like: ${data.main.feels_like.toFixed(1)}°C / ${(data.main.feels_like * 9/5 + 32).toFixed(1)}°F`);
+    console.log(`📈 Maximum temperature: ${chalk.red(data.main.temp_max.toFixed(1))}°C / ${chalk.red((data.main.temp_max * 9/5 + 32).toFixed(1))}°F`);
+    console.log(`📉 Minimum temperature: ${chalk.blue(data.main.temp_min.toFixed(1))}°C / ${chalk.blue((data.main.temp_min * 9/5 + 32).toFixed(1))}°F`);
+    console.log(`💧 Humidity: ${chalk.blue(data.main.humidity)}%`);
+
+  } catch (error) {
+    spinner.error({ text: `Error fetching weather data: ${error.message}` });
+  }
+
+  await sleep(2000);
+}
 
 async function start() {
     await welcome();
